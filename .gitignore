@@ -23,3 +23,6 @@ venv/
 # Temporary files
 *.tmp
 *.log
+
+## test files
+test/
