@@ -100,20 +100,20 @@ def main():
         for k in keys:
             print(k)
 
-    if args.subkeys and args.sam:
+    if args.subkeys and (args.sam or args.system or args.software):
         ##print(BANNER)
         if not args.subkeys:
             print("Please specify a key with --subkeys to list its subkeys.")
             return
-        keys = list_all_keys_recursive(args.sam, args.subkeys)
+        keys = list_all_keys_recursive(args.sam or args.system or args.software, args.subkeys)
         print(f"Subkeys of {args.subkeys}:")
         for k in keys:
             print(k)
 
     ## test for registry search
-    if args.search and args.sam:
+    if args.search and (args.sam or args.system or args.software):
         ##print(BANNER)
-        matches = search_keys_by_keyword(args.sam, args.search)
+        matches = search_keys_by_keyword(args.sam or args.system or args.software, args.search)
         if not matches:
             print(f"No matches found for '{args.search}'")
         else:
@@ -146,7 +146,21 @@ def main():
             # non-verbose: list names only
             for name in apps:
                 print(name)
-        
-    
+
+    ## test for get_shares function
+    if args.system and args.list_shares:
+        shares = get_shares(args.system)
+        print("Shared Folders:")
+        for share in shares:
+            print(f"- {share}")
+
+    ## test for get_drivers function
+    ## verbose output to be added later
+    if args.system and args.list_drivers:
+        drivers = get_drivers(args.system)
+        print("Drivers:")
+        for driver in drivers:
+            print(f"- {driver}")
+
 if __name__ == "__main__":
     main()

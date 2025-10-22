@@ -76,3 +76,38 @@ def get_installed_apps(hive_path,verbose=False):
     except Exception as e:
         print(f"Error accessing hive for installed apps: {e}")
     return apps
+
+## function to get list of shrares from system hive
+
+def get_shares(hive_path):
+    shares = []
+    try:
+        registry = Registry.Registry(hive_path)
+        shares_key = registry.open("ControlSet001\\Services\\LanmanServer\\Shares")
+
+        for subkey in shares_key.subkeys():
+            shares.append(subkey.name())
+    except Exception as e:
+        print(f"Error accessing SYSTEM hive for shares: {e}")
+    return shares
+
+
+## function to get drivers 
+def get_drivers(hive_path):
+    drivers = []
+    try:
+        registry = Registry.Registry(hive_path)
+        drivers_key = registry.open("ControlSet001\\Services")
+
+        for subkey in drivers_key.subkeys():
+            try:
+                start_value = subkey.value("Start").value()
+                # Consider drivers with Start type 0, 1, or 2 as loaded drivers
+                if start_value in (0, 1, 2):
+                    drivers.append(subkey.name())
+            except Exception:
+                continue
+    except Exception as e:
+        print(f"Error accessing SYSTEM hive for drivers: {e}")
+    return drivers
+
