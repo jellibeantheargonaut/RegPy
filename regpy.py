@@ -42,7 +42,7 @@ def main():
     parser.add_argument('--csv', action='store_true', help='Output results in CSV format')
 
     ## Windows specific options
-    parser.add_argument('--winver', help="Get Windows version from the registry file")
+    parser.add_argument('--winver', action='store_true', help="Get Windows version from the registry file")
     parser.add_argument('--user-sids', action='store_true', help="List all user SIDs in the registry file")
     
     ## Windows network options
@@ -161,6 +161,18 @@ def main():
         print("Drivers:")
         for driver in drivers:
             print(f"- {driver}")
+
+    ## test for get_windows_version function
+    if args.software and args.winver:
+        data = get_windows_version(args.software)
+        if data:
+            print(BANNER)
+            print(f"Windows Version Information\n")
+            for k, v in data.items():
+                print(f"{k}: {v}")
+            print()
+        else:
+            print("Windows version information not found.")
 
 if __name__ == "__main__":
     main()

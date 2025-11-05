@@ -111,3 +111,36 @@ def get_drivers(hive_path):
         print(f"Error accessing SYSTEM hive for drivers: {e}")
     return drivers
 
+
+## auxiliary function to convert time from unix timestamp
+def _convert_install_time(val):
+    from datetime import datetime
+    dt_object = datetime.fromtimestamp(val)
+    human_readable = dt_object.strftime("%Y-%m-%d %H:%M:%S")
+    return human_readable
+
+## function to get the windows version from SYSTEM hive
+def get_windows_version(hive_path):
+    try:
+        data = {}
+        registry = Registry.Registry(hive_path)
+        current_version_key = registry.open('Microsoft\\Windows NT\\CurrentVersion')
+        product_name = current_version_key.value("ProductName").value()
+        registered_owner = current_version_key.value("RegisteredOwner").value()
+        lcuver = current_version_key.value("LCUVer").value()
+        current_build = current_version_key.value("CurrentBuild").value()
+        current_version = current_version_key.value("CurrentVersion").value()
+        ## convert install_time to a readable format
+
+        install_time = current_version_key.value("InstallDate").value()
+        data["ProductName"] = product_name
+        data["RegisteredOwner"] = registered_owner
+        data["LCUVer"] = lcuver
+
+        data["CurrentBuild"] = current_build
+        data["CurrentVersion"] = current_version
+        data["InstallDate"] = _convert_install_time(install_time)
+        return data
+    except Exception as e:
+        print(f"Error accessing SYSTEM hive for Windows version: {e}")
+        return None
