@@ -174,5 +174,12 @@ def main():
         else:
             print("Windows version information not found.")
 
+    ## test for get_dns_servers function
+    if args.system and args.list_dns:
+        dns_servers = get_dns_servers(args.system)
+        print("DNS Servers:")
+        for guid, servers in dns_servers.items():
+            print(f"{guid}: {', '.join(servers)}")
+
 if __name__ == "__main__":
     main()

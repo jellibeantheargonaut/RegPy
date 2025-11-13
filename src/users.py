@@ -1,6 +1,7 @@
 from Registry import Registry
 import os
 import sys
+import re
 
 def get_user_names(sam_path):
     try:
@@ -55,47 +56,46 @@ def _get_default_value_bytes(key):
 
 def get_user_sids(sam_path):
     """
-    Returns a dictionary mapping usernames to their full SIDs (best-effort).
-    If the domain SID can be parsed from the SAM 'V' value, the full SID is returned (S-1-...-RID).
-    Otherwise returns 'RID:<rid>' where rid is the relative id.
+    Read the SAM hive at `sam_path` and return a dict mapping RID hex
+    (e.g. '000001F4') -> full SID string (e.g. 'S-1-5-21-...-500') or None if
+    a SID couldn't be parsed for that RID.
     """
-    user_sids = {}
+
+    """
+       Need to work on this function later
+    """
+    sids = {}
     try:
         registry = Registry.Registry(sam_path)
-        names_key = registry.open("SAM\\Domains\\Account\\Users\\Names")
-        account_key = registry.open("SAM\\Domains\\Account")
+        users_root = registry.open(r"SAM\Domains\Account\Users")
 
-        # Try to parse domain SID from the 'V' value (binary blob)
-        domain_sid = None
-        try:
-            v_blob = account_key.value("V").value()
-            domain_sid = _parse_sid_from_bytes(v_blob)
-        except Exception:
-            domain_sid = None
+        for subkey in users_root.subkeys():
+            name = subkey.name()
+            # RID subkeys are typically 8-hex-digit names (skip Names, etc.)
+            if not isinstance(name, str) or not re.fullmatch(r"[0-9A-Fa-f]{8}", name):
+                continue
 
-        for user_key in names_key.subkeys():
-            username = user_key.name()
+            v_bytes = _get_default_value_bytes(subkey)
             try:
-                default_bytes = _get_default_value_bytes(user_key)
-                rid = None
-                if isinstance(default_bytes, (bytes, bytearray)):
-                    # The default value usually contains the RID in the first 4 bytes (little-endian)
-                    if len(default_bytes) >= 4:
-                        rid = int.from_bytes(default_bytes[:4], byteorder='little', signed=False)
-                    else:
-                        rid = int.from_bytes(default_bytes, byteorder='little', signed=False)
-                elif isinstance(default_bytes, int):
-                    rid = default_bytes
+                rid_decimal = int(name, 16)
+            except ValueError:
+                sids[name] = None
+                continue
+
+            sid = _parse_sid_from_bytes(v_bytes) if v_bytes else None
+
+            if sid:
+                # Ensure the SID ends with the RID in decimal form
+                if sid.endswith(f"-{rid_decimal}"):
+                    full_sid = sid
                 else:
-                    # fallback: try to cast
-                    rid = int(default_bytes)
-                if domain_sid:
-                    full_sid = f"{domain_sid}-{rid}"
-                else:
-                    full_sid = f"RID:{rid}"
-                user_sids[username] = full_sid
-            except Exception as e:
-                user_sids[username] = "(error parsing RID)"
+                    full_sid = f"{sid}-{rid_decimal}"
+                sids[name] = full_sid
+            else:
+                sids[name] = None
     except Exception as e:
-        print(f"Error accessing SAM hive for SIDs: {e}")
-    return user_sids
+        # Keep behaviour simple for callers: print the error and return
+        # whatever we've collected so far (likely empty)
+        print(f"Error reading SAM hive: {e}")
+
+    return sids
