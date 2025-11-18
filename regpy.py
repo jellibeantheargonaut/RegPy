@@ -52,6 +52,10 @@ def main():
     parser.add_argument('--nic-by-ip', type=str, help="Get network interface details by IP address")
     parser.add_argument('--list-dns', action='store_true', help="List DNS servers")
 
+    ## user timestamps
+    parser.add_argument('--user-timestamps', type=str, help="Get user account timestamps by username")
+    
+
     ## Windows user options
     parser.add_argument('--list-users', action='store_true', help="List all user accounts")
     parser.add_argument('--user-details', type=str, help="Get details of a user by username")
@@ -76,7 +80,7 @@ def main():
 
     ## Test get_user_names_from_sam function
     if args.sam and args.list_users:
-        get_user_names(args.sam)
+        get_user_names(args.sam, verbose=args.verbose)
 
     ## Test get_nic_names function
     if args.system and args.list_nics:
@@ -149,7 +153,7 @@ def main():
 
     ## test for get_shares function
     if args.system and args.list_shares:
-        shares = get_shares(args.system)
+        shares = get_shares(args.system, verbose=args.verbose)
         print("Shared Folders:")
         for share in shares:
             print(f"- {share}")
@@ -157,16 +161,17 @@ def main():
     ## test for get_drivers function
     ## verbose output to be added later
     if args.system and args.list_drivers:
-        drivers = get_drivers(args.system)
+        drivers = get_drivers(args.system, verbose=args.verbose)
         print("Drivers:")
         for driver in drivers:
             print(f"- {driver}")
 
     ## test for get_windows_version function
+
     if args.software and args.winver:
-        data = get_windows_version(args.software)
+        print(BANNER)
+        data = get_windows_version(args.software, verbose=args.verbose)
         if data:
-            print(BANNER)
             print(f"Windows Version Information\n")
             for k, v in data.items():
                 print(f"{k}: {v}")

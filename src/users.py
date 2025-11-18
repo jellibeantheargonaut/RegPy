@@ -3,10 +3,12 @@ import os
 import sys
 import re
 
-def get_user_names(sam_path):
+def get_user_names(sam_path, verbose=False):
     try:
         registry = Registry.Registry(sam_path)
         users_key = registry.open("SAM\\Domains\\Account\\Users\\Names")
+        if verbose:
+            print(" [Info] Parsing Key : SAM\\Domains\\Account\\Users\\Names")
 
         print("User Accounts:")
         for user in users_key.subkeys():
@@ -99,3 +101,16 @@ def get_user_sids(sam_path):
         print(f"Error reading SAM hive: {e}")
 
     return sids
+
+
+## function to get user timestamps by username
+##
+## This function reads the SAM hive and retrieves user account timestamps
+## such as last login time, password last set time, account creation time, etc.
+##  
+##.  HKLM\SAM\SAM\Domains\Account\Users\<User RID>
+##
+##.   Last Login Time: Offset 0x30 (8 bytes, Windows FILETIME)
+##.   Password Last Set Time: Offset 0x38 (8 bytes, Windows FILETIME)
+##.   Account Creation Time: Offset 0x40 (8 bytes, Windows FILETIME)
+##  

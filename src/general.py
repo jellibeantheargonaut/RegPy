@@ -79,13 +79,18 @@ def get_installed_apps(hive_path,verbose=False):
 
 ## function to get list of shrares from system hive
 
-def get_shares(hive_path):
+def get_shares(hive_path, verbose=False):
     shares = []
     try:
         registry = Registry.Registry(hive_path)
         shares_key = registry.open("ControlSet001\\Services\\LanmanServer\\Shares")
 
+        if verbose:
+            print(" [Info] Parsing Key : ControlSet001\\Services\\LanmanServer\\Shares")
+
         for subkey in shares_key.subkeys():
+            if verbose:
+                print(f" [Info] Found Share: {subkey.name()}")
             shares.append(subkey.name())
     except Exception as e:
         print(f"Error accessing SYSTEM hive for shares: {e}")
@@ -93,17 +98,26 @@ def get_shares(hive_path):
 
 
 ## function to get drivers 
-def get_drivers(hive_path):
+def get_drivers(hive_path, verbose=False):
     drivers = []
     try:
         registry = Registry.Registry(hive_path)
         drivers_key = registry.open("ControlSet001\\Services")
 
+        if verbose:
+            print(" [Info] Parsing Key : ControlSet001\\Services")
+
         for subkey in drivers_key.subkeys():
             try:
-                start_value = subkey.value("Start").value()
+                if verbose:
+                    print(f" [Info] Found Driver: {subkey.name()}")
+                start_value = subkey.value("Start")
+
+                if verbose:
+                    print(f" [Info] Value Name: Start, Value Type: DWORD ( {subkey.value('Start').value_type_str()} )")
+                    print(f" [Info] Value Data: {start_value.value()}")
                 # Consider drivers with Start type 0, 1, or 2 as loaded drivers
-                if start_value in (0, 1, 2):
+                if start_value.value() in (0, 1, 2):
                     drivers.append(subkey.name())
             except Exception:
                 continue
@@ -120,25 +134,51 @@ def _convert_install_time(val):
     return human_readable
 
 ## function to get the windows version from SYSTEM hive
-def get_windows_version(hive_path):
+def get_windows_version(hive_path, verbose=False):
     try:
         data = {}
         registry = Registry.Registry(hive_path)
         current_version_key = registry.open('Microsoft\\Windows NT\\CurrentVersion')
-        product_name = current_version_key.value("ProductName").value()
-        registered_owner = current_version_key.value("RegisteredOwner").value()
-        lcuver = current_version_key.value("LCUVer").value()
-        current_build = current_version_key.value("CurrentBuild").value()
-        current_version = current_version_key.value("CurrentVersion").value()
+
+        ## verbose output
+        if verbose:
+            print(f" [Info] Parsing key: Microsoft\\Windows NT\\CurrentVersion")
+
+        product_name = current_version_key.value("ProductName")
+        if verbose:
+            print(f" [Info] Value Name: ProductName, Value Type: String ( {product_name.value_type_str()} )")
+            print(f" [Info] Value Data: {product_name.value()}")
+
+        registered_owner = current_version_key.value("RegisteredOwner")
+        if verbose:
+            print(f" [Info] Value Name: RegisteredOwner, Value Type: String ( {registered_owner.value_type_str()} )")
+            print(f" [Info] Value Data: {registered_owner.value()}")
+
+        lcuver = current_version_key.value("LCUVer")
+        if verbose:
+            print(f" [Info] Value Name: LCUVer, Value Type: String ( {lcuver.value_type_str()} )")
+            print(f" [Info] Value Data: {lcuver.value()}")
+
+        current_build = current_version_key.value("CurrentBuild")
+        if verbose:
+            print(f" [Info] Value Name: CurrentBuild, Value Type: String ( {current_build.value_type_str()} )")
+            print(f" [Info] Value Data: {current_build.value()}")
+
+        current_version = current_version_key.value("CurrentVersion")
+        if verbose:
+            print(f" [Info] Value Name: CurrentVersion, Value Type: String ( {current_version.value_type_str()} )")
+            print(f" [Info] Value Data: {current_version.value()}")
+            print(" ",end="\n")
+
+
         ## convert install_time to a readable format
-
         install_time = current_version_key.value("InstallDate").value()
-        data["ProductName"] = product_name
-        data["RegisteredOwner"] = registered_owner
-        data["LCUVer"] = lcuver
+        data["ProductName"] = product_name.value()
+        data["RegisteredOwner"] = registered_owner.value()
+        data["LCUVer"] = lcuver.value()
 
-        data["CurrentBuild"] = current_build
-        data["CurrentVersion"] = current_version
+        data["CurrentBuild"] = current_build.value()
+        data["CurrentVersion"] = current_version.value()
         data["InstallDate"] = _convert_install_time(install_time)
         return data
     except Exception as e:

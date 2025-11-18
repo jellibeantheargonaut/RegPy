@@ -1,7 +1,7 @@
 from Registry import Registry
 import ipaddress, binascii
 
-def get_nic_names(system_path):
+def get_nic_names(system_path, verbose=False):
     nic_names = {}
     try:
         registry = Registry.Registry(system_path)
@@ -20,7 +20,7 @@ def get_nic_names(system_path):
     return nic_names
 
 
-def get_nic_details(system_path, guid):
+def get_nic_details(system_path, guid, verbose=False):
     details = {}
     try:
         registry = Registry.Registry(system_path)
@@ -46,7 +46,7 @@ def get_nic_details(system_path, guid):
 
 
 ### function to get the list of dns servers for all nics
-def get_dns_servers(system_path):
+def get_dns_servers(system_path, verbose=False):
 
     """
     This needs to print names of nics instead of guids
