@@ -36,6 +36,7 @@ def main():
     parser.add_argument('-r', '--recursive', action='store_true', help='Recursively parse subkeys')
     parser.add_argument('--list-all-keys', action='store_true', help='Recursively list all keys in the hive')
     parser.add_argument('--subkeys', type=str, help='List all subkeys of the specified key')
+    parser.add_argument('--get-values', action='store_true', help='Get all values under the specified key')
     parser.add_argument('--search', type=str, help='Search for keys/values containing the keyword')
     parser.add_argument('--regex', type=str, help='Regex pattern to filter keys/values')
     parser.add_argument('--json', action='store_true', help='Output results in JSON format')
@@ -113,6 +114,18 @@ def main():
         print(f"Subkeys of {args.subkeys}:")
         for k in keys:
             print(k)
+
+
+    ## get the values of a specific key
+    if args.key and args.get_values and (args.sam or args.system or args.software):
+        ##print(BANNER)
+        values = get_key_values(args.sam or args.system or args.software, args.key)
+        if values is None:
+            print(f"Key '{args.key}' not found.")
+        else:
+            print(f"Values under key '{args.key}':")
+            for name, val in values.items():
+                print(f"{name}: {val}")
 
     ## test for registry search
     if args.search and (args.sam or args.system or args.software):

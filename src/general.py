@@ -184,3 +184,29 @@ def get_windows_version(hive_path, verbose=False):
     except Exception as e:
         print(f"Error accessing SYSTEM hive for Windows version: {e}")
         return None
+
+
+### functions to directly query the hives for keys and stuff
+
+## function to list the values under a given key
+## fucntion to get the values under a given key or a specific value in a key
+
+def get_key_values(hive_path, key_path, verbose=False):
+    values_dict = {}
+    try:
+        registry = Registry.Registry(hive_path)
+        key = registry.open(key_path)
+
+        if verbose:
+            print(f" [Info] Parsing Key : {key_path}")
+
+        for value in key.values():
+            values_dict[value.name()] = value.value()
+            if verbose:
+                print(f" [Info] Value Name: {value.name()}, Value Type: {value.value_type_str()}")
+                print(f" [Info] Value Data: {value.value()}")
+    except Exception as e:
+        print(f"Error accessing hive for key values: {e}")
+    return values_dict
+
+    
