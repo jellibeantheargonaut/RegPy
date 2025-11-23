@@ -38,9 +38,13 @@ def main():
     parser.add_argument('--subkeys', type=str, help='List all subkeys of the specified key')
     parser.add_argument('--get-values', action='store_true', help='Get all values under the specified key')
     parser.add_argument('--search', type=str, help='Search for keys/values containing the keyword')
-    parser.add_argument('--regex', type=str, help='Regex pattern to filter keys/values')
-    parser.add_argument('--json', action='store_true', help='Output results in JSON format')
-    parser.add_argument('--csv', action='store_true', help='Output results in CSV format')
+
+    ## to be implemented later
+    ## parser.add_argument('--regex', type=str, help='Regex pattern to filter keys/values')
+
+
+    ## parser.add_argument('--json', action='store_true', help='Output results in JSON format')
+    ## parser.add_argument('--csv', action='store_true', help='Output results in CSV format')
 
     ## Windows specific options
     parser.add_argument('--winver', action='store_true', help="Get Windows version from the registry file")
@@ -49,26 +53,26 @@ def main():
     ## Windows network options
     parser.add_argument('--list-nics', action='store_true', help="List all network interfaces")
     parser.add_argument('--nic-details', type=str, help="Get details of a network interface by GUID")
-    parser.add_argument('--nic-by-mac', type=str, help="Get network interface details by MAC address")
-    parser.add_argument('--nic-by-ip', type=str, help="Get network interface details by IP address")
+    ## parser.add_argument('--nic-by-mac', type=str, help="Get network interface details by MAC address")
+    ## parser.add_argument('--nic-by-ip', type=str, help="Get network interface details by IP address")
     parser.add_argument('--list-dns', action='store_true', help="List DNS servers")
 
     ## user timestamps
-    parser.add_argument('--user-timestamps', type=str, help="Get user account timestamps by username")
+    ## parser.add_argument('--user-timestamps', type=str, help="Get user account timestamps by username")
     
 
     ## Windows user options
     parser.add_argument('--list-users', action='store_true', help="List all user accounts")
-    parser.add_argument('--user-details', type=str, help="Get details of a user by username")
-    parser.add_argument('--list-autoruns', action='store_true', help="List all autorun entries")
+    ## parser.add_argument('--user-details', type=str, help="Get details of a user by username")
+    ## parser.add_argument('--list-autoruns', action='store_true', help="List all autorun entries")
     parser.add_argument('--list-installed-software', action='store_true', help="List all installed software")
-    parser.add_argument('--software-details', type=str, help="Get details of installed software by name")
-    parser.add_argument('--list-services', action='store_true', help="List all services")
-    parser.add_argument('--service-details', type=str, help="Get details of a service by name")
+    ## parser.add_argument('--software-details', type=str, help="Get details of installed software by name")
+    ## parser.add_argument('--list-services', action='store_true', help="List all services")
+    ## parser.add_argument('--service-details', type=str, help="Get details of a service by name")
     parser.add_argument('--list-drivers', action='store_true', help="List all drivers")
-    parser.add_argument('--driver-details', type=str, help="Get details of a driver by name")
+    ## parser.add_argument('--driver-details', type=str, help="Get details of a driver by name")
     parser.add_argument('--list-shares', action='store_true', help="List all shared folders")
-    parser.add_argument('--list-mapped-drives', action='store_true', help="List all mapped network drives")
+    ## parser.add_argument('--list-mapped-drives', action='store_true', help="List all mapped network drives")
     parser.add_argument('--list-installed-applications', action='store_true', help="List all installed applications")
     
 
@@ -119,7 +123,7 @@ def main():
     ## get the values of a specific key
     if args.key and args.get_values and (args.sam or args.system or args.software):
         ##print(BANNER)
-        values = get_key_values(args.sam or args.system or args.software, args.key)
+        values = get_key_values(args.sam or args.system or args.software, args.key, verbose=args.verbose)
         if values is None:
             print(f"Key '{args.key}' not found.")
         else:
@@ -128,6 +132,7 @@ def main():
                 print(f"{name}: {val}")
 
     ## test for registry search
+    ## this function only searches keys for now and not values inside the registry
     if args.search and (args.sam or args.system or args.software):
         ##print(BANNER)
         matches = search_keys_by_keyword(args.sam or args.system or args.software, args.search)

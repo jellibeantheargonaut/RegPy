@@ -209,4 +209,5 @@ def get_key_values(hive_path, key_path, verbose=False):
         print(f"Error accessing hive for key values: {e}")
     return values_dict
 
-    
+
+## function to export the whole hive in a csv, or json format
