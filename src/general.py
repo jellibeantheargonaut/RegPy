@@ -126,6 +126,46 @@ def get_drivers(hive_path, verbose=False):
     return drivers
 
 
+## function to get the services from system hive
+def get_services(hive_path, verbose=False):
+    services = []
+    try:
+        registry = Registry.Registry(hive_path)
+        services_key = registry.open("ControlSet001\\Services")
+
+        if verbose:
+            print(" [Info] Parsing Key : ControlSet001\\Services")
+
+        for subkey in services_key.subkeys():
+            if verbose:
+                print(f" [Info] Found Service: Key : ControlSet001\\Services\\{subkey.name()}")
+            services.append(subkey.name())
+    except Exception as e:
+        print(f"Error accessing SYSTEM hive for services: {e}")
+    return services
+
+## function to get the details of a specific service by name
+def get_service_details(hive_path, service_name, verbose=False):
+    try:
+        registry = Registry.Registry(hive_path)
+        service_key_path = f"ControlSet001\\Services\\{service_name}"
+        service_key = registry.open(service_key_path)
+
+        if verbose:
+            print(f" [Info] Parsing Key : {service_key_path}")
+
+        details = {}
+        for value in service_key.values():
+            details[value.name()] = value.value()
+            if verbose:
+                print(f" [Info] Value Name: {value.name()}, Value Type: {value.value_type_str()}")
+                print(f" [Info] Value Data: {value.value()}")
+        return details
+    except Exception as e:
+        print(f"Error accessing SYSTEM hive for service details: {e}")
+        return None
+
+
 ## auxiliary function to convert time from unix timestamp
 def _convert_install_time(val):
     from datetime import datetime

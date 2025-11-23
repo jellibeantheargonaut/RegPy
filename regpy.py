@@ -67,8 +67,10 @@ def main():
     ## parser.add_argument('--list-autoruns', action='store_true', help="List all autorun entries")
     parser.add_argument('--list-installed-software', action='store_true', help="List all installed software")
     ## parser.add_argument('--software-details', type=str, help="Get details of installed software by name")
-    ## parser.add_argument('--list-services', action='store_true', help="List all services")
-    ## parser.add_argument('--service-details', type=str, help="Get details of a service by name")
+    parser.add_argument('--list-services', action='store_true', help="List all services")
+    parser.add_argument('--service-details', type=str, help="Get details of a service by name")
+
+
     parser.add_argument('--list-drivers', action='store_true', help="List all drivers")
     ## parser.add_argument('--driver-details', type=str, help="Get details of a driver by name")
     parser.add_argument('--list-shares', action='store_true', help="List all shared folders")
@@ -175,6 +177,27 @@ def main():
         print("Shared Folders:")
         for share in shares:
             print(f"- {share}")
+
+    ## test for get_services function
+    if args.system and args.list_services:
+        services = get_services(args.system, verbose=args.verbose)
+        print("Services:")
+        for service in services:
+            print(f"- {service}")
+
+    ## test for get_service_details function
+    if args.system and args.service_details:
+        if not args.service_details:
+            print("Please specify a service name with --service-details to get its details.")
+            return
+        details = get_service_details(args.system, args.service_details, verbose=args.verbose)
+        if details:
+            print(f"Details for service '{args.service_details}':")
+            for k, v in details.items():
+                print(f"{k}: {v}")
+            print()
+        else:
+            print(f"Service '{args.service_details}' not found or could not retrieve details.")
 
     ## test for get_drivers function
     ## verbose output to be added later
