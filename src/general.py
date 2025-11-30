@@ -45,6 +45,9 @@ def search_keys_by_keyword(hive_path, keyword, start_key=""):
 
 def get_installed_apps(hive_path,verbose=False):
     root_key = "Microsoft\\Windows\\CurrentVersion\\Uninstall"
+
+    ## if key not found or also check Microsoft\\Windows\\CurrentVersion\\App Paths
+
     apps = []
     try:
         registry = Registry.Registry(hive_path)
@@ -54,21 +57,48 @@ def get_installed_apps(hive_path,verbose=False):
             try:
                 info = {}
                 info["KeyName"] = subkey.name()
-                info["DisplayName"] = subkey.value("DisplayName").raw_data().decode()
-                info["Publisher"] = subkey.value("Publisher").raw_data().decode()
-                info["DisplayVersion"] = subkey.value("DisplayVersion").raw_data().decode()
-
-                ## format InstallDate as YYYY-MM-DD if possible
-                install_date = subkey.value("InstallDate").raw_data().decode()
-                info["InstallDate"] = install_date
-                info["InstallLocation"] = subkey.value("InstallLocation").raw_data().decode()
-                info["UninstallString"] = subkey.value("UninstallString").raw_data().decode()
-                info["EstimatedSizeKB"] = subkey.value("EstimatedSize").raw_data().decode()
-                # If not verbose, append name only
+                
+                # If verbose, try to get all available values
                 if verbose:
+                    # Helper function to safely get value
+                    def safe_get_value(key, value_name):
+                        try:
+                            return key.value(value_name).value()
+                        except:
+                            return "(not set)"
+                    
+                    info["DisplayName"] = safe_get_value(subkey, "DisplayName")
+                    info["Publisher"] = safe_get_value(subkey, "Publisher")
+                    info["DisplayVersion"] = safe_get_value(subkey, "DisplayVersion")
+                    
+                    # Format InstallDate as YYYY-MM-DD if possible
+                    install_date = safe_get_value(subkey, "InstallDate")
+                    if install_date != "(not set)" and len(install_date) == 8:
+                        # Format YYYYMMDD to YYYY-MM-DD
+                        try:
+                            info["InstallDate"] = f"{install_date[0:4]}-{install_date[4:6]}-{install_date[6:8]}"
+                        except:
+                            info["InstallDate"] = install_date
+                    else:
+                        info["InstallDate"] = install_date
+                    
+                    info["InstallLocation"] = safe_get_value(subkey, "InstallLocation")
+                    info["UninstallString"] = safe_get_value(subkey, "UninstallString")
+                    
+                    # EstimatedSize is DWORD, handle differently
+                    try:
+                        size_kb = subkey.value("EstimatedSize").value()
+                        info["EstimatedSizeKB"] = str(size_kb)
+                    except:
+                        info["EstimatedSizeKB"] = "(not set)"
+                    
                     apps.append(info)
                 else:
-                    name = info.get("DisplayName") 
+                    # Non-verbose: try DisplayName first, fall back to KeyName
+                    try:
+                        name = subkey.value("DisplayName").value()
+                    except:
+                        name = info.get("KeyName")
                     apps.append(name)
             except Exception:
                 # skip problematic entries
