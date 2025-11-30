@@ -86,17 +86,26 @@ def main():
     args = parser.parse_args()
 
     ## Test get_user_names_from_sam function
-    if args.sam and args.list_users:
+    if args.list_users:
+        if not args.sam:
+            print("Please provide the SAM hive path with --sam to list user accounts.")
+            return
         get_user_names(args.sam, verbose=args.verbose)
 
     ## Test get_nic_names function
-    if args.system and args.list_nics:
+    if args.list_nics:
+        if not args.system:
+            print("Please provide the SYSTEM hive path with --system to list network interfaces.")
+            return
         nic_names = get_nic_names(args.system)
         for guid, name in nic_names.items():
             print(f"{guid}: {name}")
 
     ## Test get_nic_details function
-    if args.nic_details and args.system:
+    if args.nic_details:
+        if not args.system:
+            print("Please provide the SYSTEM hive path with --system to get NIC details.")
+            return
         ##print(BANNER)
         details = get_nic_details(args.system, args.nic_details)
         print(f"Details for NIC {args.nic_details}:")
@@ -113,7 +122,7 @@ def main():
 
     if args.subkeys and (args.sam or args.system or args.software):
         ##print(BANNER)
-        if not args.subkeys:
+        if len(args.subkeys) == 0:
             print("Please specify a key with --subkeys to list its subkeys.")
             return
         keys = list_all_keys_recursive(args.sam or args.system or args.software, args.subkeys)
@@ -146,14 +155,20 @@ def main():
                 print(m)
     
     ## test for get_user_sids function
-    if args.sam and args.user_sids:
+    if args.user_sids:
+        if not args.sam:
+            print("Please provide the SAM hive path with --sam to get user SIDs.")
+            return
         user_sids = get_user_sids(args.sam)
         print("User SIDs:")
         for username, sid in user_sids.items():
             print(f"{username}: {sid}")
 
     ## test for get_installed_apps function
-    if args.software and args.list_installed_applications:
+    if args.list_installed_applications:
+        if not args.software:
+            print("Please provide the SOFTWARE hive path with --software to list installed applications.")
+            return
         apps = get_installed_apps(args.software, verbose=args.verbose)
         print("Installed Applications:")
         if args.verbose:
@@ -172,22 +187,31 @@ def main():
                 print(name)
 
     ## test for get_shares function
-    if args.system and args.list_shares:
+    if args.list_shares:
+        if not args.system:
+            print("Please provide the SYSTEM hive path with --system to list shares.")
+            return
         shares = get_shares(args.system, verbose=args.verbose)
         print("Shared Folders:")
         for share in shares:
             print(f"- {share}")
 
     ## test for get_services function
-    if args.system and args.list_services:
+    if args.list_services:
+        if not args.system:
+            print("Please provide the SYSTEM hive path with --system to list services.")
+            return
         services = get_services(args.system, verbose=args.verbose)
         print("Services:")
         for service in services:
             print(f"- {service}")
 
     ## test for get_service_details function
-    if args.system and args.service_details:
-        if not args.service_details:
+    if args.service_details:
+        if not args.system:
+            print("Please provide the SYSTEM hive path with --system to get service details.")
+            return
+        if len(args.service_details) == 0:
             print("Please specify a service name with --service-details to get its details.")
             return
         details = get_service_details(args.system, args.service_details, verbose=args.verbose)
@@ -201,7 +225,10 @@ def main():
 
     ## test for get_drivers function
     ## verbose output to be added later
-    if args.system and args.list_drivers:
+    if  args.list_drivers:
+        if not args.system:
+            print("Please provide the SYSTEM hive path with --system to list drivers.")
+            return
         drivers = get_drivers(args.system, verbose=args.verbose)
         print("Drivers:")
         for driver in drivers:
@@ -209,7 +236,11 @@ def main():
 
     ## test for get_windows_version function
 
-    if args.software and args.winver:
+    if args.winver:
+        if not args.software:
+            print("Please provide the SOFTWARE hive path with --software to get Windows version.")
+            return
+        ##
         print(BANNER)
         data = get_windows_version(args.software, verbose=args.verbose)
         if data:
@@ -221,7 +252,10 @@ def main():
             print("Windows version information not found.")
 
     ## test for get_dns_servers function
-    if args.system and args.list_dns:
+    if args.list_dns:
+        if not args.system:
+            print("Please provide the SYSTEM hive path with --system to list DNS servers.")
+            return
         dns_servers = get_dns_servers(args.system)
         print("DNS Servers:")
         for guid, servers in dns_servers.items():

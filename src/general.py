@@ -194,10 +194,10 @@ def get_windows_version(hive_path, verbose=False):
             print(f" [Info] Value Name: RegisteredOwner, Value Type: String ( {registered_owner.value_type_str()} )")
             print(f" [Info] Value Data: {registered_owner.value()}")
 
-        lcuver = current_version_key.value("LCUVer")
-        if verbose:
-            print(f" [Info] Value Name: LCUVer, Value Type: String ( {lcuver.value_type_str()} )")
-            print(f" [Info] Value Data: {lcuver.value()}")
+        ##lcuver = current_version_key.value("LCUVer")
+        ##if verbose:
+        ##    print(f" [Info] Value Name: LCUVer, Value Type: String ( {lcuver.value_type_str()} )")
+        ##    print(f" [Info] Value Data: {lcuver.value()}")
 
         current_build = current_version_key.value("CurrentBuild")
         if verbose:
@@ -215,7 +215,7 @@ def get_windows_version(hive_path, verbose=False):
         install_time = current_version_key.value("InstallDate").value()
         data["ProductName"] = product_name.value()
         data["RegisteredOwner"] = registered_owner.value()
-        data["LCUVer"] = lcuver.value()
+        ##data["LCUVer"] = lcuver.value()
 
         data["CurrentBuild"] = current_build.value()
         data["CurrentVersion"] = current_version.value()
