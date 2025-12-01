@@ -180,7 +180,7 @@ python regpy.py --software /path/to/SOFTWARE --search "Uninstall"
 python regpy.py --sam SAM --list-users
 
 # Get user SIDs with verbose output
-python regpy.py --sam SAM --user-sids -V
+python regpy.py --software SOFTWARE --user-sids -V
 ```
 
 ### Network Forensics
