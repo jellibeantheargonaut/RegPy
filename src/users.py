@@ -17,37 +17,6 @@ def get_user_names(sam_path, verbose=False):
         print(f"Error accessing SAM hive: {e}")
         return []
 
-def _parse_sid_from_bytes(data):
-    """
-    Try to find a SID structure in the given byte blob and return it as a string (e.g. S-1-5-21-...).
-    Returns None if no plausible SID is found.
-    """
-    if not data or not isinstance(data, (bytes, bytearray)):
-        return None
-    length = len(data)
-    for i in range(0, length - 8):
-        try:
-            # SID structure: 1 byte revision (should be 1), 1 byte subauth count,
-            # 6 bytes identifier authority (big-endian), then subauth_count * 4 bytes (little-endian)
-            revision = data[i]
-            sub_count = data[i + 1]
-            if revision != 1 or sub_count < 1 or sub_count > 15:
-                continue
-            if i + 8 + 4 * sub_count > length:
-                continue
-            id_auth = int.from_bytes(data[i + 2:i + 8], byteorder='big', signed=False)
-            subauths = []
-            for j in range(sub_count):
-                start = i + 8 + j * 4
-                sub = int.from_bytes(data[start:start + 4], byteorder='little', signed=False)
-                subauths.append(str(sub))
-            sid = f"S-1-{id_auth}"
-            if subauths:
-                sid = sid + "-" + "-".join(subauths)
-            return sid
-        except Exception:
-            continue
-    return None
 
 def _get_default_value_bytes(key):
     for v in key.values():
@@ -56,49 +25,49 @@ def _get_default_value_bytes(key):
             return v.value()
     return None
 
-def get_user_sids(sam_path):
+def get_user_sids(software_path, verbose=False):
     """
-    Read the SAM hive at `sam_path` and return a dict mapping RID hex
-    (e.g. '000001F4') -> full SID string (e.g. 'S-1-5-21-...-500') or None if
-    a SID couldn't be parsed for that RID.
-    """
-
-    """
-       Need to work on this function later
+    Read the SOFTWARE hive for user SIDs.
+    Can be found as keys SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList
+    Each subkey is a user SID.
+    Username is in the "ProfileImagePath" value.
+    Returns a dict mapping SID to username.
     """
     sids = {}
     try:
-        registry = Registry.Registry(sam_path)
-        users_root = registry.open(r"SAM\Domains\Account\Users")
+        registry = Registry.Registry(software_path)
+        users_root = registry.open('Microsoft\\Windows NT\\CurrentVersion\\ProfileList')
+        
+        if verbose:
+            print(f" [Info] Parsing key: Microsoft\\Windows NT\\CurrentVersion\\ProfileList")
+        
+        for user_key in users_root.subkeys():
+            sid = user_key.name()
 
-        for subkey in users_root.subkeys():
-            name = subkey.name()
-            # RID subkeys are typically 8-hex-digit names (skip Names, etc.)
-            if not isinstance(name, str) or not re.fullmatch(r"[0-9A-Fa-f]{8}", name):
-                continue
-
-            v_bytes = _get_default_value_bytes(subkey)
+            ## some SIDs are not user accounts, skip those
+            ##if not re.match(r"S-1-5-21-\d+-\d+-\d+-\d+$", sid):
+            #    continue
+            
             try:
-                rid_decimal = int(name, 16)
-            except ValueError:
-                sids[name] = None
-                continue
+                # Get ProfileImagePath value
+                profile_path_value = user_key.value("ProfileImagePath")
+                profile_path = profile_path_value.value()
+                
+                if verbose:
+                    print(f" [Info] Value Name: ProfileImagePath, Value Type: {profile_path_value.value_type_str()}")
+                
+                # Extract username from profile path (e.g., C:\Users\John -> John)
+                username = os.path.basename(profile_path)
+                sids[sid] = username
+                
+            except Registry.RegistryValueNotFoundException:
+                # If ProfileImagePath doesn't exist, use SID as fallback
+                sids[sid] = "(No profile path)"
+                if verbose:
+                    print(f" [Warning] ProfileImagePath not found for SID: {sid}")
 
-            sid = _parse_sid_from_bytes(v_bytes) if v_bytes else None
-
-            if sid:
-                # Ensure the SID ends with the RID in decimal form
-                if sid.endswith(f"-{rid_decimal}"):
-                    full_sid = sid
-                else:
-                    full_sid = f"{sid}-{rid_decimal}"
-                sids[name] = full_sid
-            else:
-                sids[name] = None
     except Exception as e:
-        # Keep behaviour simple for callers: print the error and return
-        # whatever we've collected so far (likely empty)
-        print(f"Error reading SAM hive: {e}")
+        print(f"Error reading SOFTWARE hive: {e}")
 
     return sids
 
@@ -113,4 +82,4 @@ def get_user_sids(sam_path):
 ##.   Last Login Time: Offset 0x30 (8 bytes, Windows FILETIME)
 ##.   Password Last Set Time: Offset 0x38 (8 bytes, Windows FILETIME)
 ##.   Account Creation Time: Offset 0x40 (8 bytes, Windows FILETIME)
-##  
+##

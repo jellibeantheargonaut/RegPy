@@ -156,10 +156,10 @@ def main():
     
     ## test for get_user_sids function
     if args.user_sids:
-        if not args.sam:
-            print("Please provide the SAM hive path with --sam to get user SIDs.")
+        if not args.software:
+            print("Please provide the SOFTWARE hive path with --software to get user SIDs.")
             return
-        user_sids = get_user_sids(args.sam)
+        user_sids = get_user_sids(args.software, verbose=args.verbose)
         print("User SIDs:")
         for username, sid in user_sids.items():
             print(f"{username}: {sid}")
